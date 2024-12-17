@@ -18,7 +18,10 @@ from app.api.routers.interaction_api import interaction_router
 from app.api.routers.social_api import social_router
 from app.api.routers.subscription_api import subscription_router
 from app.api.routers.user_api import user_router
+from app.api.routers.message_api import message_router
+from app.api.routers.project_api import project_router
 from app.db.database import create_db_and_tables, engine
+from app.api.routers.voice_assist_api import voice_assist_router
 from app.core.middlewares import init_middlewares
 
 # Configure logging
@@ -27,6 +30,7 @@ logger = logging.getLogger(__name__)
 logging.getLogger('passlib').setLevel(logging.ERROR)
 
 console = Console()
+
 
 @asynccontextmanager
 async def lifespan(app_instance: FastAPI):
@@ -41,6 +45,7 @@ async def lifespan(app_instance: FastAPI):
         raise HTTPException(status_code=500, detail="Internal Server Error")
     finally:
         logger.info("Ending application lifespan...")
+
 
 app = FastAPI(
     title="ClubDev",
@@ -63,6 +68,9 @@ app.include_router(github_repo_router, prefix="/api")
 app.include_router(user_router, prefix="/api")
 app.include_router(subscription_router, prefix="/api")
 app.include_router(social_router, prefix="/api")
+app.include_router(message_router, prefix="/api")
+app.include_router(voice_assist_router, prefix="/api")
+app.include_router(project_router, prefix="/api")
 
 # Log all routes
 route_table = Table(title="API Routes")

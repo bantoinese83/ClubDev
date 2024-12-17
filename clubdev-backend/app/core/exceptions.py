@@ -10,3 +10,10 @@ class ItemNotFoundError(Exception):
     def __init__(self, message: str):
         self.message = message
         super().__init__(self.message)
+
+
+class PermissionDeniedError(Exception):
+    """Exception raised for permission denied errors."""
+    def __init__(self, message: str):
+        self.message = message
+        super().__init__(self.message)

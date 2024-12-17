@@ -11,6 +11,9 @@ from sqlmodel import SQLModel, Field, Relationship, Index, Column
 class Role(str, Enum):
     ADMIN = "admin"
     USER = "user"
+    MODERATOR = "moderator"
+    GUEST = "guest"
+    SUPER_ADMIN = "super_admin"
 
 
 class TrophyLevel(str, Enum):
@@ -388,12 +391,13 @@ class User(SQLModel, table=True):
     user_achievements: List["UserAchievement"] = Relationship(back_populates="user")
     user_badges: List["UserBadge"] = Relationship(back_populates="user")
     user_settings: List["UserSettings"] = Relationship(back_populates="user")
-    sent_messages: List["DirectMessage"] = Relationship(back_populates="sender",
-                                                        sa_relationship_kwargs={
-                                                            "foreign_keys": "[DirectMessage.sender_id]"})
-    received_messages: List["DirectMessage"] = Relationship(back_populates="receiver",
-                                                            sa_relationship_kwargs={
-                                                                "foreign_keys": "[DirectMessage.receiver_id]"})
+    sent_messages: List["DirectMessage"] = Relationship(back_populates="sender", sa_relationship_kwargs={
+        "foreign_keys": "[DirectMessage.sender_id]"})
+    received_messages: List["DirectMessage"] = Relationship(back_populates="receiver", sa_relationship_kwargs={
+        "foreign_keys": "[DirectMessage.receiver_id]"})
+    owned_projects: List["Project"] = Relationship(back_populates="owner")
+    projects: List["ProjectMember"] = Relationship(back_populates="user")
+    project_roles: List["ProjectRoleAssignment"] = Relationship(back_populates="user")
 
 
 class UserAchievement(BaseSQLModel, table=True):
@@ -476,9 +480,13 @@ class Script(SQLModel, table=True):
     grade: Optional[str] = Field(default=None, max_length=50)
     framework: Optional[str] = Field(default=None, max_length=50)
     license: Optional[str] = Field(default=None, max_length=50)
+    category: Optional[str] = Field(default=None, max_length=50)
+
 
 
 class DirectMessage(BaseSQLModel, table=True):
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: Optional[datetime] = Field(default=None)
     sender_id: uuid.UUID = Field(foreign_key="user.id", nullable=False)
     receiver_id: uuid.UUID = Field(foreign_key="user.id", nullable=False, index=True)
     content: str = Field(nullable=False, max_length=1000)
@@ -487,3 +495,77 @@ class DirectMessage(BaseSQLModel, table=True):
                                   sa_relationship_kwargs={"foreign_keys": "[DirectMessage.sender_id]"})
     receiver: "User" = Relationship(back_populates="received_messages",
                                     sa_relationship_kwargs={"foreign_keys": "[DirectMessage.receiver_id]"})
+    __table_args__ = (
+        Index(
+            "idx_direct_message",
+            "sender_id",
+            "receiver_id",
+        ),
+    )
+
+
+class ProjectMember(SQLModel, table=True):
+    id: Optional[uuid.UUID] = Field(default=None, primary_key=True)
+    project_id: uuid.UUID = Field(foreign_key="project.id")
+    user_id: uuid.UUID = Field(foreign_key="user.id")
+
+    project: "Project" = Relationship(back_populates="members")
+    user: "User" = Relationship(back_populates="projects")
+
+
+class Project(SQLModel, table=True):
+    id: Optional[uuid.UUID] = Field(default_factory=uuid.uuid4, primary_key=True)
+    name: str = Field(nullable=False, max_length=100)
+    description: Optional[str] = Field(default=None, max_length=500)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: Optional[datetime] = Field(default=None)
+    owner_id: uuid.UUID = Field(foreign_key="user.id", nullable=False)
+    owner: "User" = Relationship(back_populates="owned_projects")
+    members: List["ProjectMember"] = Relationship(back_populates="project")
+    scripts: List["ProjectScript"] = Relationship(back_populates="project")
+    roles: List["ProjectRole"] = Relationship(back_populates="project")
+    assignments: List["ProjectRoleAssignment"] = Relationship(back_populates="project")
+
+
+class ProjectScript(SQLModel, table=True):
+    id: Optional[uuid.UUID] = Field(default_factory=uuid.uuid4, primary_key=True, index=True)
+    script_id: uuid.UUID = Field(foreign_key="script.id", nullable=False)
+    project_id: uuid.UUID = Field(foreign_key="project.id", nullable=False)
+    project: "Project" = Relationship(back_populates="scripts")
+    script: "Script" = Relationship()
+
+
+class ProjectRole(SQLModel, table=True):
+    id: Optional[uuid.UUID] = Field(default_factory=uuid.uuid4, primary_key=True)
+    name: str = Field(nullable=False, max_length=50)
+    description: Optional[str] = Field(default=None, max_length=200)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: Optional[datetime] = Field(default=None)
+    project_id: uuid.UUID = Field(foreign_key="project.id", nullable=False)
+    project: "Project" = Relationship(back_populates="roles")
+    permissions: List["ProjectRolePermission"] = Relationship(back_populates="role")
+
+
+class ProjectRolePermission(SQLModel, table=True):
+    id: Optional[uuid.UUID] = Field(default_factory=uuid.uuid4, primary_key=True)
+    permission_name: str = Field(nullable=False, max_length=50)
+    description: Optional[str] = Field(default=None, max_length=200)
+    role_id: uuid.UUID = Field(foreign_key="projectrole.id", nullable=False)
+    role: "ProjectRole" = Relationship(back_populates="permissions")
+
+
+class ProjectRoleAssignment(SQLModel, table=True):
+    id: Optional[uuid.UUID] = Field(default_factory=uuid.uuid4, primary_key=True)
+    user_id: uuid.UUID = Field(foreign_key="user.id", nullable=False)
+    role_id: uuid.UUID = Field(foreign_key="projectrole.id", nullable=False)
+    project_id: uuid.UUID = Field(foreign_key="project.id", nullable=False)
+    user: "User" = Relationship(back_populates="project_roles")
+    role: "ProjectRole" = Relationship(back_populates="assignments")
+    project: "Project" = Relationship(back_populates="assignments")
+
+
+class ProjectRoleAssignmentPermission(SQLModel, table=True):
+    id: Optional[uuid.UUID] = Field(default_factory=uuid.uuid4, primary_key=True)
+    role_assignment_id: uuid.UUID = Field(foreign_key="projectroleassignment.id", nullable=False)
+    permission_name: str = Field(nullable=False, max_length=50)
+    role_assignment: "ProjectRoleAssignment" = Relationship(back_populates="permissions")

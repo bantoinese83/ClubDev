@@ -64,3 +64,6 @@ def update_user_avatar(*, db: Session = Depends(get_db), user_id: uuid.UUID, ava
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except DatabaseError as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
+
+

@@ -33,6 +33,9 @@ class Settings(BaseSettings):
     aws_bucket_name: str
     stripe_secret_key: str
     stripe_public_key: str
+    genai_api_key: str
+    celery_broker_url: str = "redis://localhost:6379/0"
+    celery_result_backend: str = "redis://localhost:6379/0"
 
     class Config:
         env_file = ".env"

@@ -8,7 +8,7 @@ from sqlmodel import Session
 from ..db.models import User, Script, BlogPost, UserProfile, UserSettings, Like, Comment, Flag, Achievement, Badge, \
     Trophy, UserAchievement, UserBadge, GamificationEvent, Leaderboard, DailyChallenge, Challenge, Follow, Message, \
     Notification, Activity, Subscription, SubscriptionPlan, Transaction, HelpQuestion, HelpAnswer, GitHubRepo, \
-    AdminAction
+    AdminAction, Project, ProjectMember, ProjectRole, ProjectRolePermission, ProjectRoleAssignment, ProjectRoleAssignmentPermission
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -183,3 +183,10 @@ help_answer = HelpSystemCRUD(HelpAnswer)
 
 github_repo = ContentCRUD(GitHubRepo)
 admin_action = UserCRUD(AdminAction)
+
+project = ContentCRUD(Project)
+project_member = ContentCRUD(ProjectMember)
+project_role = ContentCRUD(ProjectRole)
+project_role_permission = ContentCRUD(ProjectRolePermission)
+project_role_assignment = ContentCRUD(ProjectRoleAssignment)
+project_role_assignment_permission = ContentCRUD(ProjectRoleAssignmentPermission)

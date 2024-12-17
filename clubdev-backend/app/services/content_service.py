@@ -49,6 +49,7 @@ class ContentService:
                 script_in.license = metadata.get("license", script_in.license)
                 script_in.tags = metadata.get("tags", script_in.tags)
                 script_in.grade = metadata.get("grade", script_in.grade)
+                script_in.category = metadata.get("category", script_in.category)
 
             new_script = script.create(self.db, script_in)
             new_script.author_id = author_id

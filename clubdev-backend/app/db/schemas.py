@@ -95,6 +95,7 @@ class ScriptBase(BaseModel):
     description: Optional[str] = None
     tags: Optional[List[str]] = None
     instructions: Optional[str] = None
+    category: str
     language: str
     use_cases: Optional[str] = None
     framework: Optional[str] = None
@@ -106,6 +107,7 @@ class ScriptCreate(ScriptBase):
     author_id: uuid.UUID
     title: str
     content: str
+    category: str
     description: Optional[str] = None
     tags: Optional[List[str]] = None
     instructions: Optional[str] = None
@@ -554,6 +556,7 @@ class DirectMessageBase(BaseModel):
 
 class DirectMessageCreate(DirectMessageBase):
     receiver_id: uuid.UUID
+    sender_id: uuid.UUID
 
 
 class DirectMessageRead(DirectMessageBase):
@@ -607,3 +610,143 @@ class AdminActionRead(AdminActionBase):
 
     class Config:
         from_attributes = True
+
+
+class DirectMessageUpdate(BaseModel):
+    content: Optional[str] = None
+    receiver_id: Optional[uuid.UUID] = None
+    sender_id: Optional[uuid.UUID] = None
+
+
+# Project Schemas
+class ProjectBase(BaseModel):
+    name: constr(min_length=1, max_length=100)
+    description: Optional[str] = None
+
+
+class ProjectCreate(ProjectBase):
+    owner_id: uuid.UUID
+
+
+
+class ProjectUpdate(ProjectBase):
+    name: Optional[constr(min_length=1, max_length=100)] = None
+    description: Optional[str] = None
+
+
+class ProjectRead(ProjectBase):
+    id: uuid.UUID
+    owner_id: uuid.UUID
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+# Project Member Schemas
+class ProjectMemberBase(BaseModel):
+    project_id: uuid.UUID
+    user_id: uuid.UUID
+
+
+class ProjectMemberCreate(ProjectMemberBase):
+    pass
+
+
+class ProjectMemberRead(ProjectMemberBase):
+    id: uuid.UUID
+
+    class Config:
+        from_attributes = True
+
+    # Project Role Schemas
+
+
+class ProjectRoleBase(BaseModel):
+    name: constr(min_length=1, max_length=50)
+    description: Optional[str] = None
+
+
+class ProjectRoleCreate(ProjectRoleBase):
+    project_id: uuid.UUID
+
+
+class ProjectRoleUpdate(ProjectRoleBase):
+    name: Optional[constr(min_length=1, max_length=50)] = None
+    description: Optional[str] = None
+
+
+class ProjectRoleRead(ProjectRoleBase):
+    id: uuid.UUID
+    project_id: uuid.UUID
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+    # Project Role Permission Schemas
+
+
+class ProjectRolePermissionBase(BaseModel):
+    permission_name: constr(min_length=1, max_length=50)
+    description: Optional[str] = None
+
+
+class ProjectRolePermissionCreate(ProjectRolePermissionBase):
+    role_id: uuid.UUID
+
+
+class ProjectRolePermissionRead(ProjectRolePermissionBase):
+    id: uuid.UUID
+    role_id: uuid.UUID
+
+    class Config:
+        from_attributes = True
+
+    # Project Role Assignment Schemas
+
+
+class ProjectRoleAssignmentBase(BaseModel):
+    user_id: uuid.UUID
+    role_id: uuid.UUID
+    project_id: uuid.UUID
+
+
+class ProjectRoleAssignmentCreate(ProjectRoleAssignmentBase):
+    pass
+
+
+class ProjectRoleAssignmentRead(ProjectRoleAssignmentBase):
+    id: uuid.UUID
+
+    class Config:
+        from_attributes = True
+
+    # Project Role Assignment Permission Schemas
+
+
+class ProjectRoleAssignmentPermissionBase(BaseModel):
+    role_assignment_id: uuid.UUID
+    permission_name: constr(min_length=1, max_length=50)
+
+
+class ProjectRoleAssignmentPermissionCreate(ProjectRoleAssignmentPermissionBase):
+    pass
+
+
+class ProjectRoleAssignmentPermissionRead(ProjectRoleAssignmentPermissionBase):
+    id: uuid.UUID
+
+    class Config:
+        from_attributes = True
+
+
+class ProjectScriptCreate(BaseModel):
+    title: constr(min_length=1, max_length=100)
+    content: str
+    description: Optional[str] = None
+    tags: Optional[List[str]] = None
+    instructions: Optional[str] = None
+    category: str

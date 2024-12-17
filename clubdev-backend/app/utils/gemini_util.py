@@ -1,16 +1,17 @@
 import logging
-import os
 import re
 
 import google.generativeai as genai
 from google.generativeai import GenerativeModel
 from google.generativeai.types import GenerationConfig
 
+from ..core.config import settings
+
 logging.basicConfig(level=logging.INFO)
 
 
 def configure_genai():
-    api_key = os.getenv("GENAI_API_KEY")
+    api_key = settings.genai_api_key
     if not api_key:
         raise ValueError("API key not found in environment variables")
     genai.configure(api_key=api_key)
@@ -56,6 +57,7 @@ def generate_metadata_from_code(model: GenerativeModel, config: GenerationConfig
         f"Framework: <framework>\n"
         f"License: <license>\n"
         f"Language: <language>\n"
+        f"Category: <category>\n"
         "No markdown formatting is required, just plain text.\n"
     )
     response = generate_text(model, config, prompt)
@@ -98,6 +100,10 @@ def generate_metadata_from_code(model: GenerativeModel, config: GenerationConfig
     language_match = re.search(r"Language:\s*(.+)", response)
     if language_match:
         metadata["language"] = language_match.group(1).strip()
+
+    category_match = re.search(r"Category:\s*(.+)", response)
+    if category_match:
+        metadata["category"] = category_match.group(1).strip()
 
     return metadata
 
